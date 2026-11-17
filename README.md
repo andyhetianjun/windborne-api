@@ -78,34 +78,6 @@ windborne events list atmospheric_river
 To view a function's arguments, run `help(function)` in Python. To view a command's
 options, run `windborne <command> --help`.
 
-## Custom Calculations
-
-Calculation strings support uppercase `AND` and `OR` between conditions.
-`AND` binds before `OR`; use parentheses to change the grouping. Both sides
-are evaluated, so all referenced forecast inputs must be available.
-
-```python
-from windborne import calculate_points
-
-request = {
-    "model": "wm-6",
-    "calculation": "t = [temperature_2m] - 273.15; (t < 0 OR t > 30) AND [wind_u_10m] > 10",
-    "coordinates": "40.7,-74.0",
-    "forecast_hours": 0
-}
-result = calculate_points(**request)
-```
-
-For the CLI, save the request object above as JSON in `calculation.json`, then run:
-
-```bash
-windborne custom_calculations points --body calculation.json
-```
-
-Point calculations compare interpolated numeric values, so a final boolean
-expression returns `0` or `1`. A point's answer can differ from a surrounding
-grid point's answer. The SDK and CLI send the expression unchanged to the API.
-
 ## Help
 
 See the [release notes](https://github.com/windborne/windborne-api/blob/main/CHANGELOG.md)
