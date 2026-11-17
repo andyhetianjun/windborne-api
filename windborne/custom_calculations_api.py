@@ -113,8 +113,10 @@ def calculate_points(calculation, coordinates, *, model='wm-6',
     available hours in an inclusive range; omit it for every available hour.
     The complete JSON response retains coordinate order, null values,
     output_calculations, outputs and forecast_hour_errors for skipped hours.
-    The API evaluates the expression on the grids before interpolating results
-    to the coordinates.
+    The API interpolates numeric values to the coordinates before evaluating
+    conditions, including those used by if expressions. A final condition
+    returns 1 or 0. Expressions without conditions interpolate the calculated
+    grid.
     Output files must use .json. Calculation syntax and data availability are
     checked by the API.
     """
