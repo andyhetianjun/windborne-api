@@ -27,6 +27,30 @@ def test_list_omits_unset_filters_so_server_defaults_apply():
         request.assert_called_once_with(BASE, params={})
 
 
+def test_list_triggers_returns_the_envelope_and_uses_server_defaults():
+    result = {'triggers': [{'id': 42}], 'page': 0, 'page_size': 64, 'total': 1}
+    with mock.patch.object(webhooks, 'make_api_request', autospec=True, return_value=result) as request:
+        assert webhooks.list_triggers() is result
+        request.assert_called_once_with(BASE + '/triggers', params={}, raise_errors=True)
+
+
+def test_update_trigger_replaces_locations_and_preserves_null_and_false():
+    sites = [{'id': 'sj', 'geometry': {'type': 'Point', 'coordinates': [-121.9, 37.3]}}]
+    result = {'id': 42, 'active': False, 'name': None, 'note': None, 'locations': sites}
+    with mock.patch.object(webhooks, 'make_api_request', autospec=True, return_value=result) as request:
+        assert webhooks.update_trigger(42, name=None, note=None, active=False, locations=sites) is result
+        request.assert_called_once_with(BASE + '/triggers/42', method='PATCH',
+                                       json={'name': None, 'note': None, 'active': False, 'locations': sites})
+
+
+@pytest.mark.parametrize('changes', [{'add_locations': []}, {'remove_location_ids': ['sf']}])
+def test_update_trigger_rejects_mixed_location_changes(changes):
+    with mock.patch.object(webhooks, 'make_api_request') as request:
+        with pytest.raises(ValueError, match='locations cannot be combined'):
+            webhooks.update_trigger(42, locations=[], **changes)
+        request.assert_not_called()
+
+
 def test_get_returns_complete_webhook():
     result = {'id': 42, 'subscriptions': [{'id': 81, 'subscription_type': 'events.available'}]}
     with mock.patch.object(webhooks, 'make_api_request', autospec=True, return_value=result) as request:
@@ -90,6 +114,7 @@ def test_subscription_update_distinguishes_omit_clear_and_replace():
 
 @pytest.mark.parametrize('helper,args,path,method', [
     (webhooks.delete_webhook, (42,), '/42', 'DELETE'),
+    (webhooks.delete_trigger, (42,), '/triggers/42', 'DELETE'),
     (webhooks.delete_webhook_subscription, (42, 81), '/42/subscriptions/81', 'DELETE'),
     (webhooks.ping_webhook_subscription, (42, 81), '/42/subscriptions/81/ping', 'POST'),
 ])
@@ -118,6 +143,8 @@ def test_invalid_ids_cannot_reach_other_routes(identifier):
             webhooks.get_webhook(identifier)
         with pytest.raises(ValueError, match='subscription_id'):
             webhooks.ping_webhook_subscription(42, identifier)
+        with pytest.raises(ValueError, match='trigger_id'):
+            webhooks.get_trigger(identifier)
         request.assert_not_called()
 
 
