@@ -197,6 +197,14 @@ def test_create_trigger_accepts_the_documented_inline_json(rule):
     assert call.kwargs == {'method': 'POST', 'json': body}
 
 
+@pytest.mark.parametrize('destination', [{'webhook': {'url': 'https://example.com/webhook'}}, {'webhook_id': 7}])
+def test_create_trigger_cli_forwards_the_destination_in_its_json_body(destination):
+    body = {'model': 'wm-6', 'trigger': {'type': 'event', 'event_type': 'front'}, 'locations': [],
+            'forecast_window': {'min_forecast_hour': 0, 'max_forecast_hour': 24}, **destination}
+    call = invoke(['webhooks', 'create_trigger', '--body', json.dumps(body)], webhooks_api, {'id': 42, 'webhook_id': 7})
+    assert call.kwargs['json'] == body
+
+
 @pytest.mark.parametrize('filename', ['{trigger}.json', '{}'])
 def test_trigger_body_reads_an_existing_path_starting_with_a_brace(tmp_path, monkeypatch, filename):
     monkeypatch.chdir(tmp_path)

@@ -271,15 +271,21 @@ def get_trigger(trigger_id, *, output_file=None, print_response=False):
 
 
 def create_trigger(*, model, trigger, locations, forecast_window, name=UNSET, note=UNSET,
-                   active=UNSET, output_file=None, print_response=False):
-    """Save a calculation or event trigger for the given locations and forecast window.
+                   active=UNSET, webhook=UNSET, webhook_id=UNSET, output_file=None, print_response=False):
+    """Save a weather trigger and optionally subscribe a webhook in the same request.
 
-    Returns the saved definition with its numeric ID and applied defaults. Use that
-    ID in a weather_trigger.fired webhook subscription's filters.trigger_ids list.
+    Pass webhook={"url": "https://example.com/webhook"} for a new receiver or
+    webhook_id for an existing receiver owned by this API key. Either form returns
+    webhook_id. Inline creation also returns the new webhook's one-time signing_secret.
+    Omit both to save the rule for later subscription.
     """
+    if webhook is not UNSET and webhook_id is not UNSET:
+        raise WebhookArgumentError('Send either webhook or webhook_id')
+    if webhook_id is not UNSET and (type(webhook_id) is not int or webhook_id <= 0):
+        raise WebhookArgumentError('webhook_id must be a positive integer')
     _preflight_output(output_file)
     body = _body(model=model, trigger=trigger, locations=locations, forecast_window=forecast_window,
-                 name=name, note=note, active=active)
+                 name=name, note=note, active=active, webhook=webhook, webhook_id=webhook_id)
     response = make_api_request(TRIGGERS_API_BASE_URL, method='POST', json=body)
     return _result(response, output_file, print_response)
 

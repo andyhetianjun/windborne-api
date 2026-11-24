@@ -34,6 +34,25 @@ def test_list_triggers_returns_the_envelope_and_uses_server_defaults():
         request.assert_called_once_with(BASE + '/triggers', params={}, raise_errors=True)
 
 
+@pytest.mark.parametrize('destination', [{'webhook': {'url': 'https://example.com/webhook'}}, {'webhook_id': 7}])
+def test_create_trigger_attaches_the_selected_destination(destination):
+    rule = dict(model='wm-6', trigger={'type': 'event', 'event_type': 'front'}, locations=[], forecast_window={})
+    result = {'id': 42, 'webhook_id': 7}
+    if 'webhook' in destination:
+        result['signing_secret'] = 'example-signing-secret'
+    with mock.patch.object(webhooks, 'make_api_request', autospec=True, return_value=result) as request:
+        assert webhooks.create_trigger(**rule, **destination) is result
+        request.assert_called_once_with(BASE + '/triggers', method='POST', json={**rule, **destination})
+
+
+@pytest.mark.parametrize('destination', [{'webhook': {'url': 'https://example.com/webhook'}, 'webhook_id': 7},
+                                         {'webhook_id': None}, {'webhook_id': True}, {'webhook_id': '7'}, {'webhook_id': 0}])
+def test_create_trigger_rejects_ambiguous_or_invalid_webhook_ids_before_sending(destination):
+    with mock.patch.object(webhooks, 'make_api_request') as request, pytest.raises(webhooks.WebhookArgumentError):
+        webhooks.create_trigger(model='wm-6', trigger={}, locations=[], forecast_window={}, **destination)
+    request.assert_not_called()
+
+
 def test_update_trigger_replaces_locations_and_preserves_null_and_false():
     sites = [{'id': 'sj', 'geometry': {'type': 'Point', 'coordinates': [-121.9, 37.3]}}]
     result = {'id': 42, 'active': False, 'name': None, 'note': None, 'locations': sites}

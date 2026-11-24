@@ -8,8 +8,9 @@
 - The `create-trigger` and `update-trigger` commands accept inline JSON, a file
   path, or `-` for stdin. To edit locations, replace the list with `locations`
   or combine `add_locations` and `remove_location_ids` in one update.
-- Subscribe a webhook to `weather_trigger.fired` with `filters.trigger_ids` to
-  receive alerts for selected triggers.
+- In `create_trigger`, pass `webhook={"url": ...}` for a new receiver or
+  `webhook_id` to add the rule to an existing webhook. A new webhook returns its
+  signing secret once. Omit both fields to subscribe later with `filters.trigger_ids`.
 
 ## 2.1.1
 
