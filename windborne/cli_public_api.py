@@ -28,7 +28,7 @@ def _json_object_file(path, *, allow_inline=False):
     try:
         if path == '-':
             value = json.load(sys.stdin)
-        elif allow_inline and path.lstrip().startswith('{'):
+        elif allow_inline and path.lstrip().startswith('{') and not os.path.exists(path):
             value = json.loads(path)
         else:
             with open(path, encoding='utf-8') as stream:

@@ -197,6 +197,15 @@ def test_create_trigger_accepts_the_documented_inline_json(rule):
     assert call.kwargs == {'method': 'POST', 'json': body}
 
 
+@pytest.mark.parametrize('filename', ['{trigger}.json', '{}'])
+def test_trigger_body_reads_an_existing_path_starting_with_a_brace(tmp_path, monkeypatch, filename):
+    monkeypatch.chdir(tmp_path)
+    body = {'active': False}
+    (tmp_path / filename).write_text(json.dumps(body))
+    call = invoke(['webhooks', 'update-trigger', '42', '--body', filename], webhooks_api, {'id': 42})
+    assert call.kwargs['json'] == body
+
+
 def test_conflicting_location_edits_show_a_usage_error_before_sending(capsys):
     body = json.dumps({'locations': [], 'remove_location_ids': ['sj']})
     with patch('sys.argv', ['windborne', 'webhooks', 'update_trigger', '42', '--body', body]), \
