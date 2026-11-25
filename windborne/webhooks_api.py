@@ -254,7 +254,7 @@ def ping_webhook_subscription(webhook_id, subscription_id, *, output_file=None,
 
 
 def list_triggers(*, page=None, page_size=None, active=None, output_file=None, print_response=False):
-    """List your saved weather triggers. Pages start at 0 and default to 64 items (maximum 500).
+    """List your saved weather triggers. Pages start at 0 and default to 20 items (maximum 100).
 
     Returns the full triggers, page, page_size and total envelope.
     """

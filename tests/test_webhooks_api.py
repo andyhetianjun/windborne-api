@@ -28,7 +28,7 @@ def test_list_omits_unset_filters_so_server_defaults_apply():
 
 
 def test_list_triggers_returns_the_envelope_and_uses_server_defaults():
-    result = {'triggers': [{'id': 42}], 'page': 0, 'page_size': 64, 'total': 1}
+    result = {'triggers': [{'id': 42}], 'page': 0, 'page_size': 20, 'total': 1}
     with mock.patch.object(webhooks, 'make_api_request', autospec=True, return_value=result) as request:
         assert webhooks.list_triggers() is result
         request.assert_called_once_with(BASE + '/triggers', params={}, raise_errors=True)
